@@ -1,13 +1,13 @@
 "use client"
 
-import { Wifi, WifiOff, Cloud, CloudOff, CheckCircle2, AlertCircle, Loader2 } from "lucide-react"
+import { Wifi, WifiOff, Cloud, CloudOff, CheckCircle2, AlertCircle, Loader2, HardDrive } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface StatusIndicatorProps {
   isOnline: boolean
   pendingCount: number
   isSyncing: boolean
-  lastStatus: "success" | "offline" | "error" | null
+  lastStatus: "success" | "offline" | "error" | "storage_full" | null
 }
 
 export function StatusIndicator({ isOnline, pendingCount, isSyncing, lastStatus }: StatusIndicatorProps) {
@@ -41,12 +41,12 @@ export function StatusIndicator({ isOnline, pendingCount, isSyncing, lastStatus 
           {isSyncing ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Synchronisation...</span>
+              <span>Synchronisation en cours...</span>
             </>
           ) : (
             <>
               <CloudOff className="h-4 w-4" />
-              <span>{pendingCount} panne(s) en attente</span>
+              <span>{pendingCount} panne{pendingCount > 1 ? "s" : ""} en attente</span>
             </>
           )}
         </div>
@@ -59,7 +59,8 @@ export function StatusIndicator({ isOnline, pendingCount, isSyncing, lastStatus 
             "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium animate-in fade-in duration-300",
             lastStatus === "success" && "bg-green-100 text-green-800",
             lastStatus === "offline" && "bg-blue-100 text-blue-800",
-            lastStatus === "error" && "bg-red-100 text-red-800"
+            lastStatus === "error" && "bg-red-100 text-red-800",
+            lastStatus === "storage_full" && "bg-red-100 text-red-800"
           )}
         >
           {lastStatus === "success" && (
@@ -71,13 +72,19 @@ export function StatusIndicator({ isOnline, pendingCount, isSyncing, lastStatus 
           {lastStatus === "offline" && (
             <>
               <Cloud className="h-4 w-4" />
-              <span>Stockée hors ligne - envoi automatique dès reconnexion</span>
+              <span>Stockée hors ligne — envoi automatique dès reconnexion</span>
             </>
           )}
           {lastStatus === "error" && (
             <>
               <AlertCircle className="h-4 w-4" />
               <span>Erreur lors de l&apos;envoi</span>
+            </>
+          )}
+          {lastStatus === "storage_full" && (
+            <>
+              <HardDrive className="h-4 w-4" />
+              <span>Stockage local plein (100 pannes en attente). Reconnectez-vous pour libérer de l&apos;espace.</span>
             </>
           )}
         </div>

@@ -14,15 +14,19 @@ export function useGPS() {
 
   const getPosition = useCallback(() => {
     if (!navigator.geolocation) {
-      setError("La géolocalisation n'est pas supportée par votre navigateur.")
+      const msg = "La géolocalisation n'est pas supportée par votre navigateur."
+      console.error("❌ [GPS]", msg)
+      setError(msg)
       return
     }
 
+    console.log("📍 [GPS] Demande de position en cours...")
     setIsLoading(true)
     setError(null)
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
+        console.log(`✅ [GPS] Position obtenue: ${pos.coords.latitude}, ${pos.coords.longitude}`)
         setPosition({
           latitude: pos.coords.latitude,
           longitude: pos.coords.longitude,
@@ -44,6 +48,7 @@ export function useGPS() {
             break
         }
         
+        console.error(`❌ [GPS] ${errorMessage}`)
         setError(errorMessage)
         setIsLoading(false)
       },

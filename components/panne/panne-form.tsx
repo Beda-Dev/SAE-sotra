@@ -1,27 +1,53 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Bus, Route, AlertTriangle, Send, Loader2 } from "lucide-react"
+import { useState, useEffect, useCallback } from "react"
+import { Bus, Route, AlertTriangle, Send, Loader2, MapPin } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { SelectField } from "./select-field"
 import { InputField } from "./input-field"
 import { StatusIndicator } from "./status-indicator"
+import { ConfirmationScreen } from "./confirmation-screen"
+import { HistoryScreen } from "./history-screen"
 import { useGPS } from "@/hooks/use-gps"
 import { useOfflineSync, type PanneData } from "@/hooks/use-offline-sync"
+import { useHistory } from "@/hooks/use-history"
 import { TYPES_PANNES, LIGNES_BUS } from "@/lib/panne-config"
 
+type View = "form" | "confirmation" | "history"
+
 export function PanneForm() {
+  const [view, setView] = useState<View>("form")
   const [typePanne, setTypePanne] = useState("")
   const [vehicleNumber, setVehicleNumber] = useState("")
   const [ligne, setLigne] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [lastSubmitted, setLastSubmitted] = useState<PanneData | null>(null)
+  const [lastSubmitStatus, setLastSubmitStatus] = useState<"sent" | "pending">("sent")
+  const [gpsWarning, setGpsWarning] = useState(false)
 
-  const { position, getPosition } = useGPS()
+  const { position, isLoading: gpsLoading, getPosition } = useGPS()
   const { isOnline, pendingCount, isSyncing, lastStatus, submitPanne, clearStatus } = useOfflineSync()
+  const { history, addToHistory, updateStatus } = useHistory()
 
-  // Récupérer automatiquement la position GPS au chargement
+  // Debug les changements de view et history
   useEffect(() => {
+    console.log(`👀 [RENDER] view=${view}, lastSubmitted=${lastSubmitted ? "OK" : "NULL"}, history.length=${history.length}, pendingCount=${pendingCount}`)
+  }, [view, lastSubmitted, history.length, pendingCount])
+
+  // Alert quand l'historique change
+  useEffect(() => {
+    if (history.length > 0) {
+      console.log(`📚 [DEBUG] Histoire a ${history.length} entrée(s):`)
+      history.forEach((entry, idx) => {
+        console.log(`   [${idx}] ${entry.id} - ${entry.type_panne} (${entry.status})`)
+      })
+    }
+  }, [history])
+
+  // GPS auto au chargement
+  useEffect(() => {
+    console.log("📍 [GPS] Demande de position GPS...")
     getPosition()
   }, [getPosition])
 
@@ -33,40 +59,113 @@ export function PanneForm() {
     }
   }, [lastStatus, clearStatus])
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!typePanne || !vehicleNumber || !ligne) return
 
-    if (!typePanne || !vehicleNumber || !ligne) {
-      return
+    console.log("📋 [FORM] Validation du formulaire...")
+
+    const hasGPS = position && (position.latitude !== 0 || position.longitude !== 0)
+
+    // Avertissement GPS mais on laisse soumettre
+    if (!hasGPS) {
+      console.warn("⚠️  [GPS] Pas de position GPS valide")
+      setGpsWarning(true)
+    } else {
+      console.log(`✅ [GPS] Position GPS: ${position.latitude}, ${position.longitude}`)
     }
 
-    // Récupérer la position GPS au moment de la soumission si pas encore disponible
-    if (!position) {
-      getPosition()
-    }
-
+    console.log("📤 [FORM] Préparation de la soumission...")
     setIsSubmitting(true)
 
     const panneData: PanneData = {
       id: `panne-${Date.now()}`,
       type_panne: TYPES_PANNES.find((t) => t.value === typePanne)?.label || typePanne,
-      gps_position: position || { latitude: 0, longitude: 0 },
+      gps_position: position
+        ? { latitude: position.latitude, longitude: position.longitude }
+        : { latitude: 0, longitude: 0 },
       vehicle_number: vehicleNumber,
       line: ligne,
       time: new Date().toISOString(),
     }
 
-    await submitPanne(panneData)
+    console.log(`🚀 [FORM] Envoi de la panne...`)
+    const result = await submitPanne(panneData)
 
-    // Réinitialiser le formulaire
+    if (!result) {
+      // Erreur lors de l'envoi - données sauvegardées localement
+      console.log("⏸️  [FORM] Panne en attente - Montrer confirmation quand même")
+    }
+
+    // Enregistrement dans l'historique TOUJOURS
+    const historyStatus = result ? "sent" : "pending"
+    console.log(`📚 [HISTORY] Ajout à l'historique - Statut: ${historyStatus}`)
+    addToHistory(panneData, historyStatus)
+
+    setLastSubmitted(panneData)
+    setLastSubmitStatus(historyStatus)
+    console.log(`✅ [FORM] lastSubmitted défini et view sera confirmatio avec status=${historyStatus}`)
+
+    // Réinitialisation
+    console.log("🔄 [FORM] Réinitialisation du formulaire")
     setTypePanne("")
     setVehicleNumber("")
     setLigne("")
+    setGpsWarning(false)
     setIsSubmitting(false)
-  }
+
+    console.log("✅ [FORM] Passage à l'écran de confirmation")
+    setView("confirmation")
+  }, [typePanne, vehicleNumber, ligne, position, submitPanne, addToHistory])
+
+  const handleNewDeclaration = useCallback(() => {
+    setView("form")
+    setLastSubmitted(null)
+    // Relancer le GPS pour la prochaine déclaration
+    getPosition()
+  }, [getPosition])
+
+  // Écoute des synchros réussies pour mettre à jour l'historique
+  useEffect(() => {
+    if (lastStatus === "success" && history.length > 0) {
+      // Marquer les déclarations en attente comme envoyées
+      history
+        .filter((e) => e.status === "pending")
+        .forEach((e) => updateStatus(e.id, "sent"))
+    }
+  }, [lastStatus]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const isFormValid = typePanne && vehicleNumber && ligne
 
+  // ─── Vue Confirmation ───────────────────────────────────────────────────────
+  if (view === "confirmation" && lastSubmitted) {
+    return (
+      <ConfirmationScreen
+        panne={lastSubmitted}
+        status={lastSubmitStatus}
+        onNewDeclaration={handleNewDeclaration}
+        onViewHistory={() => setView("history")}
+      />
+    )
+  }
+
+  // ─── Vue Historique ─────────────────────────────────────────────────────────
+  if (view === "history") {
+    return (
+      <HistoryScreen
+        history={history}
+        onBack={() => setView(lastSubmitted ? "confirmation" : "form")}
+        onClear={() => {
+          try {
+            localStorage.removeItem("sotra_history")
+          } catch {}
+          window.location.reload()
+        }}
+      />
+    )
+  }
+
+  // ─── Vue Formulaire ─────────────────────────────────────────────────────────
   return (
     <Card className="w-full max-w-lg mx-auto shadow-xl border-0">
       <CardHeader className="bg-primary text-primary-foreground rounded-t-xl pb-6">
@@ -84,7 +183,6 @@ export function PanneForm() {
       </CardHeader>
 
       <CardContent className="pt-6 space-y-5">
-        {/* Indicateurs de statut */}
         <StatusIndicator
           isOnline={isOnline}
           pendingCount={pendingCount}
@@ -124,6 +222,42 @@ export function PanneForm() {
             onChange={setLigne}
             icon={Route}
           />
+
+          {/* Statut GPS */}
+          <div className="space-y-1">
+            <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${
+              position
+                ? "bg-green-50 text-green-700"
+                : gpsLoading
+                ? "bg-blue-50 text-blue-700"
+                : "bg-amber-50 text-amber-700"
+            }`}>
+              <MapPin className="h-4 w-4 shrink-0" />
+              {gpsLoading ? (
+                <span>Récupération de la position GPS...</span>
+              ) : position ? (
+                <span>GPS : {position.latitude.toFixed(4)}, {position.longitude.toFixed(4)}</span>
+              ) : (
+                <span>Position GPS non disponible — la déclaration sera envoyée sans localisation</span>
+              )}
+              {!position && !gpsLoading && (
+                <button
+                  type="button"
+                  onClick={getPosition}
+                  className="ml-auto underline text-xs shrink-0"
+                >
+                  Réessayer
+                </button>
+              )}
+            </div>
+
+            {/* Avertissement GPS bloquant affiché si tentative de soumission sans GPS */}
+            {gpsWarning && !position && (
+              <p className="text-xs text-amber-600 px-1">
+                ⚠ Soumission sans GPS — assurez-vous d'avoir activé la géolocalisation pour une localisation précise.
+              </p>
+            )}
+          </div>
 
           {/* Bouton de soumission */}
           <Button

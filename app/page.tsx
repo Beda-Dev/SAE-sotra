@@ -1,6 +1,20 @@
+"use client"
+
+import { useEffect } from "react"
 import { PanneForm } from "@/components/panne/panne-form"
 
 export default function Home() {
+  useEffect(() => {
+    console.log("%c🚀 ╔════════════════════════════════════════╗", "color: #00aa00; font-weight: bold; font-size: 14px")
+    console.log("%c🚀 ║  SOTRA SAE - Application Démarrée  ║", "color: #00aa00; font-weight: bold; font-size: 14px")
+    console.log("%c🚀 ╚════════════════════════════════════════╝", "color: #00aa00; font-weight: bold; font-size: 14px")
+    console.log("%c📋 Console Logs Actifs:", "color: #0066cc; font-weight: bold")
+    console.log("%c✓ API Calls  ✓ GPS  ✓ Storage  ✓ History  ✓ Sync", "color: #0066cc; font-family: monospace")
+    console.log("")
+    console.log("%cℹ️  Ouvrez la console pour suivre le flux complet:", "color: #666; font-style: italic")
+    console.log("%cFormulaire → GPS → API → Historique → Sync", "color: #666; font-family: monospace; font-style: italic")
+  }, [])
+
   return (
     <main className="min-h-screen bg-background py-6 px-4">
       <div className="max-w-lg mx-auto">

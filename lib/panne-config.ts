@@ -1,7 +1,7 @@
 // Configuration modulaire pour le formulaire de déclaration de panne SAE
 // Modifiez ces valeurs pour personnaliser le formulaire
 
-export const API_ENDPOINT = "https://YOUR_API_ENDPOINT_HERE"
+export const API_ENDPOINT = "https://gmao-project.odoo.com/sotra_gmao/api/panne"
 
 // Types de pannes disponibles
 export const TYPES_PANNES = [
