@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { Bus, Route, AlertTriangle, Send, Loader2, MapPin } from "lucide-react"
+import { Bus, Route, AlertTriangle, Send, Loader2, MapPin, History } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { SelectField } from "./select-field"
@@ -169,16 +169,31 @@ export function PanneForm() {
   return (
     <Card className="w-full max-w-lg mx-auto shadow-xl border-0">
       <CardHeader className="bg-primary text-primary-foreground rounded-t-xl pb-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-secondary rounded-lg">
-            <AlertTriangle className="h-6 w-6 text-secondary-foreground" />
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 flex-1">
+            <div className="p-2 bg-secondary rounded-lg">
+              <AlertTriangle className="h-6 w-6 text-secondary-foreground" />
+            </div>
+            <div>
+              <CardTitle className="text-xl font-bold">Déclaration de Panne SAE</CardTitle>
+              <CardDescription className="text-primary-foreground/80">
+                SOTRA - Côte d&apos;Ivoire
+              </CardDescription>
+            </div>
           </div>
-          <div>
-            <CardTitle className="text-xl font-bold">Déclaration de Panne SAE</CardTitle>
-            <CardDescription className="text-primary-foreground/80">
-              SOTRA - Côte d&apos;Ivoire
-            </CardDescription>
-          </div>
+          {/* Bouton historique */}
+          {history.length > 0 && (
+            <button
+              onClick={() => setView("history")}
+              title="Voir l'historique"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-secondary text-secondary-foreground hover:bg-secondary/90 rounded-md text-sm font-medium transition-colors shrink-0"
+            >
+              <History className="h-4 w-4" />
+              <span className="text-xs bg-red-500 text-white rounded-full px-2 py-0.5 min-w-fit">
+                {history.length}
+              </span>
+            </button>
+          )}
         </div>
       </CardHeader>
 
