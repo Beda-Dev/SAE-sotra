@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import type { HistoryEntry } from "@/hooks/use-history"
-import { LIGNES_BUS } from "@/lib/panne-config"
+import { BUS_LIST } from "@/lib/panne-config"
 
 interface HistoryScreenProps {
   history: HistoryEntry[]
@@ -69,7 +69,7 @@ export function HistoryScreen({ history, onBack, onClear }: HistoryScreenProps) 
 
 function HistoryCard({ entry }: { entry: HistoryEntry }) {
   const isSent = entry.status === "sent"
-  const ligneName = LIGNES_BUS.find((l) => l.value === entry.line)?.label ?? entry.line
+  const ligneName = BUS_LIST.find((l) => l.value === entry.line)?.label ?? entry.line
   const hasGPS = entry.gps_position.latitude !== 0 || entry.gps_position.longitude !== 0
 
   const formattedTime = new Intl.DateTimeFormat("fr-CI", {
