@@ -12,14 +12,14 @@ import { HistoryScreen } from "./history-screen"
 import { useGPS } from "@/hooks/use-gps"
 import { useOfflineSync, type PanneData } from "@/hooks/use-offline-sync"
 import { useHistory } from "@/hooks/use-history"
-import { TYPES_PANNES, LIGNES_BUS } from "@/lib/panne-config"
+import { TYPES_PANNES, BUS_LIST, getLineForBus } from "@/lib/panne-config"
 
 type View = "form" | "confirmation" | "history"
 
 export function PanneForm() {
   const [view, setView] = useState<View>("form")
   const [typePanne, setTypePanne] = useState("")
-  const [vehicleNumber, setVehicleNumber] = useState("")
+  const [busNumber, setBusNumber] = useState("")
   const [ligne, setLigne] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [lastSubmitted, setLastSubmitted] = useState<PanneData | null>(null)
@@ -51,6 +51,15 @@ export function PanneForm() {
     getPosition()
   }, [getPosition])
 
+  // Remplir automatiquement la ligne quand un bus est sélectionné
+  useEffect(() => {
+    if (busNumber) {
+      const autoLigne = getLineForBus(busNumber)
+      setLigne(autoLigne)
+      console.log(`🚍 [BUS] Sélection du bus ${busNumber} → ligne ${autoLigne}`)
+    }
+  }, [busNumber])
+
   // Effacer le statut après 5 secondes
   useEffect(() => {
     if (lastStatus) {
@@ -61,7 +70,7 @@ export function PanneForm() {
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!typePanne || !vehicleNumber || !ligne) return
+    if (!typePanne || !busNumber || !ligne) return
 
     console.log("📋 [FORM] Validation du formulaire...")
 
@@ -84,39 +93,41 @@ export function PanneForm() {
       gps_position: position
         ? { latitude: position.latitude, longitude: position.longitude }
         : { latitude: 0, longitude: 0 },
-      vehicle_number: vehicleNumber,
+      vehicle_number: busNumber,
       line: ligne,
       time: new Date().toISOString(),
     }
 
     console.log(`🚀 [FORM] Envoi de la panne...`)
-    const result = await submitPanne(panneData)
+    const resultPanne = await submitPanne(panneData)
 
-    if (!result) {
+    if (!resultPanne) {
       // Erreur lors de l'envoi - données sauvegardées localement
       console.log("⏸️  [FORM] Panne en attente - Montrer confirmation quand même")
     }
 
     // Enregistrement dans l'historique TOUJOURS
-    const historyStatus = result ? "sent" : "pending"
+    const historyStatus = resultPanne ? "sent" : "pending"
     console.log(`📚 [HISTORY] Ajout à l'historique - Statut: ${historyStatus}`)
     addToHistory(panneData, historyStatus)
 
-    setLastSubmitted(panneData)
+    // Utiliser la panne retournée si disponible, sinon utiliser la panne d'origine
+    const finalPanne = resultPanne || panneData
+    setLastSubmitted(finalPanne)
     setLastSubmitStatus(historyStatus)
     console.log(`✅ [FORM] lastSubmitted défini et view sera confirmatio avec status=${historyStatus}`)
 
     // Réinitialisation
     console.log("🔄 [FORM] Réinitialisation du formulaire")
     setTypePanne("")
-    setVehicleNumber("")
+    setBusNumber("")
     setLigne("")
     setGpsWarning(false)
     setIsSubmitting(false)
 
     console.log("✅ [FORM] Passage à l'écran de confirmation")
     setView("confirmation")
-  }, [typePanne, vehicleNumber, ligne, position, submitPanne, addToHistory])
+  }, [typePanne, busNumber, ligne, position, submitPanne, addToHistory])
 
   const handleNewDeclaration = useCallback(() => {
     setView("form")
@@ -135,7 +146,7 @@ export function PanneForm() {
     }
   }, [lastStatus]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const isFormValid = typePanne && vehicleNumber && ligne
+  const isFormValid = typePanne && busNumber && ligne
 
   // ─── Vue Confirmation ───────────────────────────────────────────────────────
   if (view === "confirmation" && lastSubmitted) {
@@ -217,26 +228,31 @@ export function PanneForm() {
             icon={AlertTriangle}
           />
 
-          {/* Numéro du véhicule */}
-          <InputField
-            id="vehicle-number"
-            label="Numéro du véhicule"
-            placeholder="Ex: SOTRA-123"
-            value={vehicleNumber}
-            onChange={setVehicleNumber}
+          {/* Bus */}
+          <SelectField
+            id="bus-number"
+            label="Bus"
+            placeholder="Sélectionnez le bus"
+            options={BUS_LIST}
+            value={busNumber}
+            onChange={setBusNumber}
             icon={Bus}
           />
 
-          {/* Ligne */}
-          <SelectField
-            id="ligne"
-            label="Ligne"
-            placeholder="Sélectionnez la ligne"
-            options={LIGNES_BUS}
-            value={ligne}
-            onChange={setLigne}
-            icon={Route}
-          />
+          {/* Ligne (auto-remplie) */}
+          <div className="space-y-1.5">
+            <label htmlFor="ligne" className="block text-sm font-medium text-foreground">
+              Ligne <span className="text-green-600 text-xs ml-1">(automatique)</span>
+            </label>
+            <div className="relative">
+              <div className="flex items-center gap-3 px-3 py-3 rounded-lg border border-input bg-background text-foreground">
+                <Route className="h-4 w-4 text-foreground/60 shrink-0" />
+                <span className={ligne ? "text-foreground" : "text-foreground/50"}>
+                  {ligne || "La ligne s'affichera après la sélection du bus"}
+                </span>
+              </div>
+            </div>
+          </div>
 
           {/* Statut GPS */}
           <div className="space-y-1">

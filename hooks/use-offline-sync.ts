@@ -10,6 +10,15 @@ export interface PanneData {
   vehicle_number: string
   line: string
   time: string
+  panne_id?: number
+  panne_ref?: string
+}
+
+export interface SubmitResult {
+  success: boolean
+  panne_id?: number
+  panne_ref?: string
+  message?: string
 }
 
 // Vérifie la connectivité réelle (pas seulement navigator.onLine)
@@ -180,7 +189,7 @@ export function useOfflineSync() {
   }, [loadPendingCount, syncPendingData])
 
   const submitPanne = useCallback(
-    async (panne: PanneData): Promise<boolean> => {
+    async (panne: PanneData): Promise<PanneData | null> => {
       console.log("📝 [FORM] Nouvelle panne soumise")
       console.log(`   → ID: ${panne.id}`)
       console.log(`   → Type: ${panne.type_panne}`)
@@ -196,7 +205,7 @@ export function useOfflineSync() {
         console.log("📴 [API] Mode hors ligne détecté - Sauvegarde locale")
         savePanneLocally(panne)
         setLastStatus("offline")
-        return false
+        return null
       }
 
       try {
@@ -209,8 +218,21 @@ export function useOfflineSync() {
         })
 
         if (response.ok) {
+          const responseData: SubmitResult = await response.json()
           console.log(`✅ [API] Panne envoyée avec succès (${response.status})`)
+          console.log(`   → panne_id: ${responseData.panne_id}`)
+          console.log(`   → panne_ref: ${responseData.panne_ref}`)
+          console.log(`   → message: ${responseData.message}`)
+          
           setLastStatus("success")
+          
+          // Mettre à jour la panne avec les données du serveur
+          const updatedPanne: PanneData = {
+            ...panne,
+            panne_id: responseData.panne_id,
+            panne_ref: responseData.panne_ref,
+          }
+          
           // Important: bien vider le storage car envoi réussi
           try {
             const stored = localStorage.getItem(STORAGE_KEY)
@@ -222,18 +244,19 @@ export function useOfflineSync() {
           } catch (e) {
             console.error("⚠️  [STORAGE] Erreur nettoyage storage:", e)
           }
-          return true
+          
+          return updatedPanne
         } else {
           console.warn(`⚠️  [API] Erreur serveur ${response.status} - Sauvegarde locale`)
           savePanneLocally(panne)
           setLastStatus("offline")
-          return false
+          return null
         }
       } catch (error) {
         console.error("❌ [API] Erreur d'envoi - Sauvegarde locale:", error)
         savePanneLocally(panne)
         setLastStatus("offline")
-        return false
+        return null
       }
     },
     [savePanneLocally]

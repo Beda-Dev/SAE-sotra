@@ -5,40 +5,71 @@ export const API_ENDPOINT = "https://gmao-project.odoo.com/sotra_gmao/api/panne"
 
 // Types de pannes disponibles
 export const TYPES_PANNES = [
-  { value: "moteur", label: "Problème moteur" },
-  { value: "freins", label: "Problème de freins" },
-  { value: "pneu", label: "Pneu crevé / endommagé" },
-  { value: "electrique", label: "Panne électrique" },
-  { value: "climatisation", label: "Climatisation en panne" },
-  { value: "carburant", label: "Panne de carburant" },
-  { value: "transmission", label: "Problème de transmission" },
-  { value: "direction", label: "Problème de direction" },
-  { value: "autre", label: "Autre" },
+  { value: "moteur", label: "Moteur" },
+  { value: "boite-vitesse", label: "Boîte de vitesse" },
+  { value: "suspension", label: "Suspension" },
+  { value: "circuit-freinage", label: "Circuit de freinage" },
+  { value: "circuit-electrique", label: "Circuit électrique" },
+  { value: "pont", label: "Pont" },
+  { value: "carrosserie", label: "Carrosserie" },
+  { value: "direction", label: "Direction" },
+  { value: "autre", label: "Autres (à préciser)" },
 ]
 
-// Lignes de bus disponibles
-export const LIGNES_BUS = [
-  { value: "01", label: "Ligne 01 - Abobo / Plateau" },
-  { value: "02", label: "Ligne 02 - Yopougon / Treichville" },
-  { value: "03", label: "Ligne 03 - Cocody / Adjamé" },
-  { value: "04", label: "Ligne 04 - Marcory / Plateau" },
-  { value: "05", label: "Ligne 05 - Koumassi / Adjamé" },
-  { value: "08", label: "Ligne 08 - Port-Bouët / Plateau" },
-  { value: "21", label: "Ligne 21 - Abobo / Adjamé" },
-  { value: "22", label: "Ligne 22 - Yopougon / Adjamé" },
-  { value: "23", label: "Ligne 23 - Cocody / Riviera" },
-  { value: "24", label: "Ligne 24 - Bingerville / Plateau" },
-  { value: "25", label: "Ligne 25 - Anyama / Adjamé" },
-  { value: "81", label: "Ligne 81 - Express Abobo" },
-  { value: "82", label: "Ligne 82 - Express Yopougon" },
+// Bus disponibles avec leurs lignes associées
+export const BUS_LIST = [
+  { value: "BUS-0005", label: "BUS-0005", ligne: "Ligne 2 — Adjamé ↔ Treichville" },
+  { value: "BUS-0006", label: "BUS-0006", ligne: "Ligne 3 — Adjamé ↔ Marcory" },
+  { value: "BUS-0008", label: "BUS-0008", ligne: "Ligne 4 — Adjamé ↔ Koumassi" },
+  { value: "BUS-0009", label: "BUS-0009", ligne: "Ligne 4 — Adjamé ↔ Koumassi" },
+  { value: "BUS-0010", label: "BUS-0010", ligne: "Ligne 5 — Adjamé ↔ Port-Bouët" },
+  { value: "BUS-0012", label: "BUS-0012", ligne: "Ligne 7 — Adjamé ↔ Cocody Riviera" },
+  { value: "BUS-0013", label: "BUS-0013", ligne: "Ligne 7 — Adjamé ↔ Cocody Riviera" },
+  { value: "BUS-0014", label: "BUS-0014", ligne: "Ligne 9 — Adjamé ↔ Bingerville" },
+  { value: "BUS-0015", label: "BUS-0015", ligne: "Ligne 9 — Adjamé ↔ Bingerville" },
+  { value: "BUS-0016", label: "BUS-0016", ligne: "Ligne 10 — Adjamé ↔ Anyama" },
+  { value: "BUS-0017", label: "BUS-0017", ligne: "Ligne 11 — Adjamé ↔ Attécoubé" },
+  { value: "BUS-0018", label: "BUS-0018", ligne: "Ligne 41 — Cocody ↔ Plateau" },
+  { value: "BUS-0019", label: "BUS-0019", ligne: "Ligne 41 — Cocody ↔ Plateau" },
+  { value: "BUS-0020", label: "BUS-0020", ligne: "Ligne 42 — Cocody ↔ Treichville" },
+  { value: "BUS-0021", label: "BUS-0021", ligne: "Ligne 43 — Cocody ↔ Adjamé" },
+  { value: "BUS-0022", label: "BUS-0022", ligne: "Ligne 44 — Riviera ↔ Plateau" },
+  { value: "BUS-0023", label: "BUS-0023", ligne: "Ligne 45 — Bingerville ↔ Plateau" },
+  { value: "BUS-0025", label: "BUS-0025", ligne: "Ligne 12 — Abobo ↔ Plateau" },
+  { value: "BUS-0027", label: "BUS-0027", ligne: "Ligne 12 — Abobo ↔ Plateau" },
+  { value: "BUS-0028", label: "BUS-0028", ligne: "Ligne 13 — Abobo ↔ Treichville" },
+  { value: "BUS-0029", label: "BUS-0029", ligne: "Ligne 13 — Abobo ↔ Treichville" },
+  { value: "BUS-0030", label: "BUS-0030", ligne: "Ligne 14 — Abobo ↔ Koumassi" },
+  { value: "BUS-0031", label: "BUS-0031", ligne: "Ligne 14 — Abobo ↔ Koumassi" },
+  { value: "BUS-0032", label: "BUS-0032", ligne: "Ligne 15 — Abobo ↔ Marcory" },
+  { value: "BUS-0034", label: "BUS-0034", ligne: "Ligne 17 — Abobo ↔ Anyama" },
+  { value: "BUS-0035", label: "BUS-0035", ligne: "Ligne 52 — Express Abobo ↔ Plateau" },
+  { value: "BUS-0037", label: "BUS-0037", ligne: "Ligne 21 — Yopougon ↔ Plateau" },
+  { value: "BUS-0038", label: "BUS-0038", ligne: "Ligne 21 — Yopougon ↔ Plateau" },
+  { value: "BUS-0042", label: "BUS-0042", ligne: "Ligne 23 — Yopougon ↔ Adjamé" },
+  { value: "BUS-0043", label: "BUS-0043", ligne: "Ligne 24 — Yopougon ↔ Koumassi" },
+  { value: "BUS-0045", label: "BUS-0045", ligne: "Ligne 25 — Yopougon ↔ Marcory" },
+  { value: "BUS-0046", label: "BUS-0046", ligne: "Ligne 26 — Yopougon ↔ Cocody" },
+  { value: "BUS-0047", label: "BUS-0047", ligne: "Ligne 27 — Yopougon Niangon ↔ Plateau" },
+  { value: "BUS-0048", label: "BUS-0048", ligne: "Ligne 28 — Yopougon Selmer ↔ Plateau" },
+  { value: "BUS-0049", label: "BUS-0049", ligne: "Ligne 51 — Express Yopougon ↔ Plateau" },
+  { value: "BUS-0050", label: "BUS-0050", ligne: "Ligne 31 — Koumassi ↔ Plateau" },
+  { value: "BUS-0052", label: "BUS-0052", ligne: "Ligne 31 — Koumassi ↔ Plateau" },
+  { value: "BUS-0053", label: "BUS-0053", ligne: "Ligne 32 — Koumassi ↔ Treichville" },
+  { value: "BUS-0054", label: "BUS-0054", ligne: "Ligne 32 — Koumassi ↔ Treichville" },
+  { value: "BUS-0056", label: "BUS-0056", ligne: "Ligne 53 — Express Koumassi ↔ Plateau" },
+  { value: "BUS-0057", label: "BUS-0057", ligne: "Ligne 35 — Marcory ↔ Plateau" },
+  { value: "BUS-0058", label: "BUS-0058", ligne: "Ligne 35 — Marcory ↔ Plateau" },
+  { value: "BUS-0059", label: "BUS-0059", ligne: "Ligne 36 — Marcory ↔ Adjamé" },
+  { value: "BUS-0060", label: "BUS-0060", ligne: "Ligne 33 — Port-Bouët ↔ Plateau" },
+  { value: "BUS-0064", label: "BUS-0064", ligne: "Ligne 38 — Port-Bouët ↔ Adjamé" },
 ]
 
-// Préfixes de véhicules suggérés
-export const PREFIXES_VEHICULES = [
-  "SOTRA-",
-  "BUS-",
-  "VH-",
-]
+// Helper pour obtenir la ligne associée à un bus
+export const getLineForBus = (busNumber: string): string => {
+  const bus = BUS_LIST.find(b => b.value === busNumber)
+  return bus ? bus.ligne : ""
+}
 
 // Messages de l'application
 export const MESSAGES = {

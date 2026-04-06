@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import type { PanneData } from "@/hooks/use-offline-sync"
-import { LIGNES_BUS } from "@/lib/panne-config"
 
 interface ConfirmationScreenProps {
   panne: PanneData
@@ -21,8 +20,11 @@ export function ConfirmationScreen({
   onViewHistory,
 }: ConfirmationScreenProps) {
   const isSent = status === "sent"
-  const ligneName = LIGNES_BUS.find((l) => l.value === panne.line)?.label ?? panne.line
   const hasGPS = panne.gps_position.latitude !== 0 || panne.gps_position.longitude !== 0
+
+  // Afficher la référence du serveur si disponible (panne_ref), sinon l'ID local
+  const displayRef = panne.panne_ref || panne.id
+  const displayId = panne.panne_id ? `#${panne.panne_id}` : ""
 
   const formattedTime = new Intl.DateTimeFormat("fr-CI", {
     day: "2-digit",
@@ -70,9 +72,12 @@ export function ConfirmationScreen({
 
       <CardContent className="pt-6 space-y-4">
         {/* Référence */}
-        <div className="bg-muted rounded-lg px-4 py-3 text-center">
-          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Référence</p>
-          <p className="font-mono text-sm font-semibold text-foreground">{panne.id}</p>
+        <div className="bg-muted rounded-lg px-4 py-3 text-center space-y-1">
+          <p className="text-xs text-muted-foreground uppercase tracking-wide">Référence</p>
+          <p className="font-mono text-sm font-semibold text-foreground">{displayRef}</p>
+          {displayId && (
+            <p className="text-xs text-muted-foreground font-medium">{displayId}</p>
+          )}
         </div>
 
         {/* Détails de la déclaration */}
@@ -90,7 +95,7 @@ export function ConfirmationScreen({
           <DetailRow
             icon={<Route className="h-4 w-4 text-primary" />}
             label="Ligne"
-            value={ligneName}
+            value={panne.line}
           />
           <DetailRow
             icon={<Clock className="h-4 w-4 text-primary" />}
